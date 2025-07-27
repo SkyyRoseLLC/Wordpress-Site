@@ -1,0 +1,33 @@
+name: Deploy to WordPress via JWT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  post-page:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate and create page on WordPress
+        run: |
+          echo "Getting JWT Token..."
+          TOKEN=$(curl -s -X POST "$WP_DOMAIN/wp-json/jwt-auth/v1/token" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\": \"$WP_ADMIN_USERNAME\", \"password\": \"$WP_APP_PASSWORD\"}" | jq -r .token)
+
+          echo "Token acquired. Creating new page..."
+          curl -X POST "$WP_DOMAIN/wp-json/wp/v2/pages" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "Skyy Test Page",
+              "content": "<h2>Hello from Skyy!</h2><p>This page was generated via GitHub Actions.</p>",
+              "status": "publish"
+            }'
+        env:
+          WP_DOMAIN: ${{ secrets.WP_DOMAIN }}
+          WP_ADMIN_USERNAME: ${{ secrets.WP_ADMIN_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
