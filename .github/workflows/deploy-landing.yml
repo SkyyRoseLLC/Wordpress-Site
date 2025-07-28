@@ -1,0 +1,33 @@
+name: Deploy Skyy Rose Landing Page
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-landing-page:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Authenticate and post landing page
+        run: |
+          echo "Authenticating with WordPress..."
+          TOKEN=$(curl -s -X POST "$WP_DOMAIN/wp-json/jwt-auth/v1/token" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\": \"$WP_ADMIN_USERNAME\", \"password\": \"$WP_APP_PASSWORD\"}" | jq -r .token)
+
+          echo "Creating Skyy Rose page..."
+          curl -X POST "$WP_DOMAIN/wp-json/wp/v2/pages" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "Skyy Rose",
+              "content": "<div id=\"skyy-rose-hero\"><div class=\"floating-bg-1\"></div><div class=\"floating-bg-2\"></div><div class=\"floating-bg-3\"></div><div class=\"hero-content\"><div class=\"hero-badge\"><span class=\"sparkle\">✨</span><span>New Collections Available</span></div><h1 class=\"hero-title\"><span class=\"skyy-text\">Skyy</span><span class=\"rose-text\">Rose</span></h1><p class=\"hero-subtitle\">Where fashion meets emotion. Discover collections that tell your story through <span class=\"accent-rose\">bold designs</span> and <span class=\"accent-gold\">luxurious comfort</span>.</p><div class=\"hero-buttons\"><button class=\"btn-primary\">Explore Collections <span class=\"arrow\">→</span></button><button class=\"btn-secondary\">New Arrivals</button></div><div class=\"hero-stats\"><div class=\"stat-item\"><div class=\"stat-number gold\">3</div><div class=\"stat-label\">Collections</div></div><div class=\"stat-item\"><div class=\"stat-number rose\">50+</div><div class=\"stat-label\">Unique Pieces</div></div><div class=\"stat-item\"><div class=\"stat-number silver\">★★★★★</div><div class=\"stat-label\">Customer Love</div></div></div></div><div class=\"scroll-indicator\"><div class=\"scroll-dot\"></div></div></div>",
+              "status": "publish"
+            }'
+        env:
+          WP_DOMAIN: ${{ secrets.WP_DOMAIN }}
+          WP_ADMIN_USERNAME: ${{ secrets.WP_ADMIN_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
