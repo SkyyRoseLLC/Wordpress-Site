@@ -1,0 +1,31 @@
+name: Deploy SkyyRose Collections Page
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-collections-page:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Authenticate and post collections page
+        run: |
+          TOKEN=$(curl -s -X POST "$WP_DOMAIN/wp-json/jwt-auth/v1/token" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\": \"$WP_ADMIN_USERNAME\", \"password\": \"$WP_APP_PASSWORD\"}" | jq -r .token)
+
+          curl -X POST "$WP_DOMAIN/wp-json/wp/v2/pages" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "title": "SkyyRose Collections",
+              "content": "<section class=\"collections-intro\"><h2>Shop the Signature Collections</h2><p>Rose Gold. Noir. Ethereal. Elegantly designed, emotionally resonant.</p><div class=\"collection-previews\"><div class=\"collection-card\">🖤 Noir Collection</div><div class=\"collection-card\">🌹 Rose Gold Series</div><div class=\"collection-card\">✨ Ethereal Luxe</div></div></section>",
+              "status": "publish"
+            }'
+        env:
+          WP_DOMAIN: ${{ secrets.WP_DOMAIN }}
+          WP_ADMIN_USERNAME: ${{ secrets.WP_ADMIN_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
